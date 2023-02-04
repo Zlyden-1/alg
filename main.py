@@ -16,7 +16,7 @@ def parse_algorithm(algorithm):
     word = ''
     for symbol in algorithm:
         # TODO проверить на вторую входящую U
-        if re.fullmatch(r'[0-9]|U', symbol) and ('U' not in word):
+        if re.fullmatch(r'[0-9]', symbol) or (re.fullmatch(r'U', symbol) and ('U' not in word)):
             word += symbol
         else:
             if re.fullmatch(pattern, word):
