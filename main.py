@@ -13,6 +13,15 @@ def is_valid_algorithm(algorithm):
     return True
 
 
+def input_binary_code():
+    binary_code = input('Введите бинарный код, либо оставьте поле пустым: ')
+    if not re.fullmatch(r'[0-1]+|', binary_code):
+        while not re.fullmatch(r'[0-1]+|', binary_code):
+            binary_code = input(
+                f'Ошибка. Бинарный код может состоять только из 0 и 1, либо быть пустым.\nВведите бинарный код, либо оставьте поле пустым: ')
+    return binary_code
+
+
 def parse_algorithm(algorithm):
     commands = []
 
@@ -55,8 +64,12 @@ def read_commands(commands, binary_code):
             i = wu(commands, i)
         elif re.fullmatch(r'X\d+U\d+', commands[i]):
             if binary_code:
-                i = xu(commands, i, binary_code[binary_count])
-                binary_count += 1
+                try:
+                    i = xu(commands, i, binary_code[binary_count])
+                    binary_count += 1
+                except IndexError:
+                    print('Ошибка бинарного кода, программа незавершена.')
+                    return
             else:
                 i = xu(commands, i, '')
     yf()
@@ -101,15 +114,5 @@ def y(command):
     print(f'Пройдено Y{command.strip("Y")}')
 
 
-# TODO Добавить более продуманную проверку бинарного кода
-def is_valid_binary_code(binary_code):
-    pass
-
-
 if __name__ == '__main__':
-    binary_code = input('Введите бинарный код, либо оставьте поле пустым: ')
-    if not re.fullmatch(r'[0-1]+|', binary_code):
-        while not re.fullmatch(r'[0-1]+|', binary_code):
-            binary_code = input(
-                f'Ошибка. Бинарный код может состоять только из 0 и 1, либо быть пустым.\nВведите бинарный код, либо оставьте поле пустым: ')
-    read_commands(parse_algorithm(input_algorithm), binary_code)
+    read_commands(parse_algorithm(input_algorithm), input_binary_code())
