@@ -4,13 +4,36 @@ with open('resources/Bartenev_LSA.txt', 'r') as file:
     input_algorithm = file.read()
 
 
-# TODO Проверять что Ys Yf только в начале и в конце
-# TODO надо проверять commands на то что под каждый U есть D
-# TODO возможно логичней проверять не только algorithm, но и commands
 def is_valid_algorithm(algorithm):
     if not re.fullmatch(r'[XYWUDsf0-9]*', algorithm):
-        return False
-    return True
+        raise TypeError('Ошибка. Алгоритм содержит некорректные символы.')
+    return algorithm
+
+
+def is_valid_commands(commands):
+    # проверка наличия и правильной позиции Ys Yf
+    if not(commands.count('Ys') == 1 and commands.count('Yf') == 1):
+        raise TypeError('Ошибка. Более одной открывающей Ys или закрывающей Yf команды.')
+    if not(commands[0] == 'Ys' and commands[-1] == 'Yf'):
+        raise TypeError('Ошибка. Открывающая Ys или закрывающая Yf команда находятся в середине алгоритма.')
+
+    # проверка под каждую U есть D
+    for command in commands:
+        if re.fullmatch(r'X\d+U\d+', command):
+            u_number = command.split('U')[1]
+            if commands.count(f'D{u_number}') < 1:
+                raise TypeError(f'Ошибка. Нет команды D{u_number}, на которую ссылается {command}.')
+            if commands.count(f'D{u_number}') > 1:
+                raise TypeError(f'Ошибка. Более одной команды D{u_number}, на которую ссылается {command}.')
+
+        if re.fullmatch(r'WU\d+', command):
+            u_number = command.split('U')[1]
+            if commands.count(f'D{u_number}') < 1:
+                raise TypeError(f'Ошибка. Нет команды D{u_number}, на которую ссылается {command}.')
+            if commands.count(f'D{u_number}') > 1:
+                raise TypeError(f'Ошибка. Более одной команды D{u_number}, на которую ссылается {command}.')
+
+    return commands
 
 
 def input_binary_code():
@@ -28,6 +51,7 @@ def parse_algorithm(algorithm):
     pattern = r'Ys|Yf|Y\d+|X\d+U\d+|WU\d+|D\d+'
     word = ''
     for symbol in algorithm:
+        # TODO возможно нужна проверка на WU(если после W цифры)
         # TODO проверить на вторую входящую U(вроде сделал уже и работает)
         if re.fullmatch(r'[0-9]', symbol) or (re.fullmatch(r'U', symbol) and ('U' not in word)):
             word += symbol
@@ -42,8 +66,7 @@ def parse_algorithm(algorithm):
         word = ''
 
     if word:
-        raise TypeError(word)
-    print(commands)
+        raise TypeError(f'Ошибка. Неверная команда, с вхождением на индексе:{len(algorithm)-len(word)+1}')
     return commands
 
 
@@ -68,7 +91,7 @@ def read_commands(commands, binary_code):
                     i = xu(commands, i, binary_code[binary_count])
                     binary_count += 1
                 except IndexError:
-                    print('Ошибка бинарного кода, программа незавершена.')
+                    print('Ошибка бинарного кода, программа не завершена.')
                     return
             else:
                 i = xu(commands, i, '')
@@ -115,4 +138,10 @@ def y(command):
 
 
 if __name__ == '__main__':
-    read_commands(parse_algorithm(input_algorithm), input_binary_code())
+    try:
+        read_commands(is_valid_commands(parse_algorithm(is_valid_algorithm(input_algorithm))), input_binary_code())
+    except TypeError as e:
+        print(e)
+        exit()
+
+
